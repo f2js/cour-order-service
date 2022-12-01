@@ -1,33 +1,29 @@
 version: 2.1
 
 orbs:
-  windows: circleci/windows@2.2.0
+  node: circleci/node@5.0.1
 
 jobs:
   test:
     description: Setup and run application tests
     executor:
-      name: windows/default
+      name: node/default
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - dotnet-packages-v1-{{ checksum "cour-order-service.csproj" }}
       - run:
-          name: "Install project dependencies"
-          command: dotnet.exe restore
-      - save_cache:
-          paths:
-            - C:\Users\circleci\.nuget\packages
-          key: dotnet-packages-v1-{{ checksum "cour-order-service.csproj" }}
+          name: Pre-Install tasks
+          command: wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && sudo dpkg -i packages-microsoft-prod.deb
+      - run:
+          name: Install dotnet-skd-6.0
+          command: sudo apt-get update && sudo apt-get install -y apt-transport-https && sudo apt-get update && sudo apt-get install -y dotnet-sdk-6.0
       - run:
           name: "Run Application Tests"
-          command: dotnet.exe test -v n --results-directory:test_coverage --collect:"Code Coverage"
+          command: dotnet test -v n --results-directory:test_coverage --collect:"Code Coverage"
       - run:
           name: "Print Working Directory"
           command: pwd
       - store_artifacts:
-          path: C:\Users\circleci\project\test_coverage
+          path: ~/project/test_coverage
   build:
     docker:
       - image: circleci/buildpack-deps:bullseye
