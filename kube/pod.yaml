@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cour-order
+  labels:
+    app.kubernetes.io/name: cour-order
+spec:
+  containers:
+    - name: cour-order
+      image: f2js/cour-order:latest
+      ports:
+        - containerPort: 8080
+      env:
+        - name: HBASE_IP
+          value: ${HBASE_IP}
+        - name: KAFKA_IP
+          value: ${KAFKA_IP}
