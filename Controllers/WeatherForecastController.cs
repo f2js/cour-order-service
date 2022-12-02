@@ -1,4 +1,4 @@
-using cour_order_service.Model;
+using cour_order_service.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace cour_order_service.Controllers

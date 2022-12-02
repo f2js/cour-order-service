@@ -1,4 +1,4 @@
-namespace cour_order_service.Model
+namespace cour_order_service.Models
 {
     public class WeatherForecast
     {

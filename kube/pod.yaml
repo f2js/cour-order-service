@@ -15,3 +15,5 @@ spec:
           value: ${HBASE_IP}
         - name: KAFKA_IP
           value: ${KAFKA_IP}
+        - name: ASPNETCORE_URLS
+          value: http://*:80
