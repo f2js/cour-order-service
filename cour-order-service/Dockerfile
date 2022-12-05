@@ -3,15 +3,14 @@
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
 EXPOSE 80
-EXPOSE 8080
-#EXPOSE 443
+EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["cour-order-service.csproj", "."]
-RUN dotnet restore "./cour-order-service.csproj"
+COPY ["cour-order-service/cour-order-service.csproj", "cour-order-service/"]
+RUN dotnet restore "cour-order-service/cour-order-service.csproj"
 COPY . .
-WORKDIR "/src/."
+WORKDIR "/src/cour-order-service"
 RUN dotnet build "cour-order-service.csproj" -c Release -o /app/build
 
 FROM build AS publish
