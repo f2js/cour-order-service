@@ -13,14 +13,14 @@ pub async fn index() -> String {
 pub async fn get_order(path: web::Path<String>) -> impl Responder {
     let db_ip = match get_db_ip() {
         Some(v) => v,
-        None => return generate_err_response(&mut HttpResponse::InternalServerError(), DB_IP_ENV_ERR_MSG),
+        None => return generate_response(&mut HttpResponse::InternalServerError(), DB_IP_ENV_ERR_MSG),
     };
     let id = path.into_inner();
     match workers::get_row(&id, &db_ip) {
         Ok(r) => 
-            return generate_err_response(&mut HttpResponse::Ok(),format!("Successfully got order: {:?}", r.o_id)),
+            return generate_response(&mut HttpResponse::Ok(),format!("Successfully got order: {:?}", r.o_id)),
         Err(e) =>
-            return generate_err_response(&mut HttpResponse::InternalServerError(), e.to_string()),
+            return generate_response(&mut HttpResponse::InternalServerError(), e.to_string()),
     }
 }
 
@@ -34,6 +34,6 @@ pub async fn get_order(path: web::Path<String>) -> impl Responder {
 //     return HttpResponse::Ok();
 // }
 
-fn generate_err_response(response_builder: &mut HttpResponseBuilder, error: impl Serialize) -> HttpResponse {
+fn generate_response(response_builder: &mut HttpResponseBuilder, error: impl Serialize) -> HttpResponse {
     response_builder.content_type("APPLICATION_JSON").json(error)
 }
