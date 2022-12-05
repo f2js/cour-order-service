@@ -7,7 +7,7 @@ FROM debian:stable-slim
 RUN apt-get update
 RUN apt-get install -y openssl
 
-EXPOSE 8080
+EXPOSE 8081
 
 COPY --from=builder ./target/release/cour_order_service ./target/release/cour_order_service
 CMD ["./target/release/cour_order_service"]
