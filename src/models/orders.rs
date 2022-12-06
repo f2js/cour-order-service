@@ -40,6 +40,11 @@ pub enum OrderState {
     Delivered,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct OrderEvent {
+    pub o_id: String,
+}
+
 // Impls
 impl Order {
     pub fn build(builder: OrderBuilder) -> Option<Self> {
@@ -77,6 +82,23 @@ impl std::str::FromStr for OrderState {
             "OutForDelivery" => Ok(OrderState::OutForDelivery),
             "Delivered" => Ok(OrderState::Delivered),
             _ => Err(()),
+        }
+    }
+}
+
+impl From<Order> for OrderEvent {
+    fn from(o: Order) -> Self {
+        Self {
+            o_id: o.o_id
+        }
+    }
+}
+
+impl OrderEvent {
+    pub fn to_json_string(&self) -> Result<String, OrderServiceError> {
+        match serde_json::to_string(&self) {
+            Ok(s) => Ok(s),
+            Err(e) => Err(OrderServiceError::from(e)),
         }
     }
 }

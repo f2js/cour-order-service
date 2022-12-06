@@ -1,13 +1,13 @@
-use crate::models::{errors::OrderServiceError, orders::Order};
+use crate::models::{errors::OrderServiceError, orders::{ OrderEvent}};
 
 use super::producer_connection::{KafkaProducer};
 
-pub fn publish_order_out_for_delivery(order: Order, producer: &mut impl KafkaProducer) -> Result<(), OrderServiceError> {
+pub fn publish_order_out_for_delivery(order: OrderEvent, producer: &mut impl KafkaProducer) -> Result<(), OrderServiceError> {
     let json = order.to_json_string()?;
     producer.send("OrderOutForDelivery", json)
 }
 
-pub fn publish_order_delivered(order: Order, producer: &mut impl KafkaProducer) -> Result<(), OrderServiceError> {
+pub fn publish_order_delivered(order: OrderEvent, producer: &mut impl KafkaProducer) -> Result<(), OrderServiceError> {
     let json = order.to_json_string()?;
     producer.send("OrderDelivered", json)
 }
@@ -20,10 +20,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_out_for_delivery_is_ok() {
-        let order = Order{cust_addr: "CustAddr".into(), rest_addr: "RestAddr".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
+        let order = OrderEvent{o_id: "o_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\",\"c_id\":\"{}\",\"r_id\":\"{}\",\"cust_addr\":\"{}\",\"rest_addr\":\"{}\",\"state\":\"{}\"}}", 
-            order.o_id, order.c_id, order.r_id, order.cust_addr, order.rest_addr, order.state);
+            "{{\"o_id\":\"{}\"}}", 
+            order.o_id);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {
@@ -40,10 +40,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_out_for_delivery_is_err() {
-        let order = Order{cust_addr: "CustAddr".into(), rest_addr: "RestAddr".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
+        let order = OrderEvent{o_id: "o_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\",\"c_id\":\"{}\",\"r_id\":\"{}\",\"cust_addr\":\"{}\",\"rest_addr\":\"{}\",\"state\":\"{}\"}}", 
-            order.o_id, order.c_id, order.r_id, order.cust_addr, order.rest_addr, order.state);
+            "{{\"o_id\":\"{}\"}}", 
+            order.o_id);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {
@@ -59,10 +59,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_delivered_is_ok() {
-        let order = Order{cust_addr: "CustAddr".into(), rest_addr: "RestAddr".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
+        let order = OrderEvent{o_id: "o_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\",\"c_id\":\"{}\",\"r_id\":\"{}\",\"cust_addr\":\"{}\",\"rest_addr\":\"{}\",\"state\":\"{}\"}}", 
-            order.o_id, order.c_id, order.r_id, order.cust_addr, order.rest_addr, order.state);
+            "{{\"o_id\":\"{}\"}}", 
+            order.o_id);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {
@@ -79,10 +79,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_delivered_is_err() {
-        let order = Order{cust_addr: "CustAddr".into(), rest_addr: "RestAddr".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
+        let order = OrderEvent{o_id: "o_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\",\"c_id\":\"{}\",\"r_id\":\"{}\",\"cust_addr\":\"{}\",\"rest_addr\":\"{}\",\"state\":\"{}\"}}", 
-            order.o_id, order.c_id, order.r_id, order.cust_addr, order.rest_addr, order.state);
+            "{{\"o_id\":\"{}\"}}", 
+            order.o_id);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {
