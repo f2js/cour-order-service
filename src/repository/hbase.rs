@@ -5,9 +5,10 @@ use crate::models::orders::OrderState;
 use crate::models::{orders::Order};
 use crate::repository::hbase_connection::HbaseClient;
 use crate::repository::hbase_utils::{create_order_builder_from_hbase_row, build_single_column_filter};
+use hbase_thrift::BatchMutationBuilder;
 use hbase_thrift::hbase::TScan;
 
-use super::hbase_utils::create_scan;
+use super::hbase_utils::{create_scan, create_cell_mutation};
 
 
 pub fn create_order_table(mut client: impl HbaseClient) -> Result<(), OrderServiceError> {
@@ -32,8 +33,11 @@ pub fn get_order_row(row_id: &str, mut client: impl HbaseClient) -> Result<Order
     }
 }
 
-pub fn update_order_state(row_id: &str, order_state: OrderState, mut client: impl HbaseClient) {
-    
+pub fn update_order_state(row_id: &str, new_order_state: OrderState, unix_time: i64, mut client: impl HbaseClient) -> Result<(), OrderServiceError>{
+    let mutations = vec![create_cell_mutation("info", "state", new_order_state.to_string())];
+    let batch = <BatchMutationBuilder>::default().row(row_id.clone()).mutations(mutations).build();
+    client.put("orders", vec![batch], Some(unix_time), None)?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -58,6 +62,46 @@ mod tests {
     }
 
     #[test]
+    fn test_update_order_state_is_ok() {
+        let userid = "id";
+        let order_state = OrderState::OutForDelivery;
+        let time: i64 = 10;
+        let mut mock_con = MockHbaseClient::new();
+        mock_con.expect_put()
+            .withf(move |x, _y, z, æ| {
+                x.eq("orders") && z.eq(&Some(time.clone())) && æ.is_none()
+            })
+            .times(1)
+            .returning(|_x, _y, _z, _æ| {
+                Err(thrift::Error::User("Error".into()))
+            }
+        );
+        let res = update_order_state(userid, order_state, time, mock_con);
+        assert!(res.is_err());
+        let result_error = res.err().unwrap();
+        assert_err!(result_error, OrderServiceError::DBError(_));
+    }
+
+    #[test]
+    fn test_update_order_state_is_err() {
+        let userid = "id";
+        let order_state = OrderState::OutForDelivery;
+        let time: i64 = 10;
+        let mut mock_con = MockHbaseClient::new();
+        mock_con.expect_put()
+            .withf(move |x, _y, z, æ| {
+                x.eq("orders") && z.eq(&Some(time.clone())) && æ.is_none()
+            })
+            .times(1)
+            .returning(|_x, _y, _z, _æ| {
+                Ok(())
+            }
+        );
+        let res = update_order_state(userid, order_state, time, mock_con);
+        assert!(res.is_ok());
+    }
+
+    #[test]
     fn test_get_order_row_is_ok() {
         let userid = "id";
         let mut mock_con = MockHbaseClient::new();
@@ -72,6 +116,7 @@ mod tests {
                         r_id: "rest_id".to_owned(),
                         cust_addr: "custaddr".to_owned(),
                         rest_addr: "restaddr".to_owned(),
+                        state: "pending".to_owned(),
                     }
                 )])
             });
@@ -94,6 +139,7 @@ mod tests {
                         r_id: "rest_id".to_owned(),
                         cust_addr: "custaddr".to_owned(),
                         rest_addr: "restaddr".to_owned(),
+                        state: "pending".to_owned(),
                     }
                 )])
             });

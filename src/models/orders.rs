@@ -21,6 +21,7 @@ pub struct Order {
     pub r_id: String,
     pub cust_addr: String,
     pub rest_addr: String,
+    pub state: String,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -30,6 +31,7 @@ pub struct OrderBuilder {
     pub r_id: Option<String>,
     pub cust_addr: Option<String>,
     pub rest_addr: Option<String>,
+    pub state: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -47,6 +49,7 @@ impl Order {
             r_id: builder.r_id?,
             cust_addr: builder.cust_addr?,
             rest_addr: builder.rest_addr?,
+            state: builder.state?,
         })
     }
 

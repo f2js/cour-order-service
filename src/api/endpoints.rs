@@ -24,15 +24,35 @@ pub async fn get_order(path: web::Path<String>) -> impl Responder {
     }
 }
 
-// #[post("order/pickup/{id}")]
-// pub async fn pickup_order(path: web::Path<String) -> impl Responder {
-//     let db_ip = match get_db_ip() {
-//         Some(v) => v,
-//         None => return generate_err_response(&mut HttpResponse::InternalServerError(), DB_IP_ENV_ERR_MSG),
-//     };
-//     let id = path.into_inner();
-//     return HttpResponse::Ok();
-// }
+#[post("order/pickup/{id}")]
+pub async fn pickup_order(path: web::Path<String>) -> impl Responder {
+    let db_ip = match get_db_ip() {
+        Some(v) => v,
+        None => return generate_response(&mut HttpResponse::InternalServerError(), DB_IP_ENV_ERR_MSG),
+    };
+    let id = path.into_inner();
+    match workers::mark_order_as_out_for_delivery(&id, &db_ip) {
+        Ok(_) => 
+            return generate_response(&mut HttpResponse::Ok(),format!("Order is now out for delivery!")),
+        Err(e) =>
+            return generate_response(&mut HttpResponse::InternalServerError(), e.to_string()),
+    }
+}
+
+#[post("order/deliver/{id}")]
+pub async fn deliver_order(path: web::Path<String>) -> impl Responder {
+    let db_ip = match get_db_ip() {
+        Some(v) => v,
+        None => return generate_response(&mut HttpResponse::InternalServerError(), DB_IP_ENV_ERR_MSG),
+    };
+    let id = path.into_inner();
+    match workers::mark_order_as_delivered(&id, &db_ip) {
+        Ok(_) => 
+            return generate_response(&mut HttpResponse::Ok(),format!("Order is now delivered!")),
+        Err(e) =>
+            return generate_response(&mut HttpResponse::InternalServerError(), e.to_string()),
+    }
+}
 
 fn generate_response(response_builder: &mut HttpResponseBuilder, error: impl Serialize) -> HttpResponse {
     response_builder.content_type("APPLICATION_JSON").json(error)
