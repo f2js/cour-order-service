@@ -9,7 +9,7 @@ spec:
     - name: cour-order
       image: f2js/cour-order:latest
       ports:
-        - containerPort: 8081
+        - containerPort: 8080
       env:
         - name: HBASE_IP
           value: ${HBASE_IP}
