@@ -32,6 +32,12 @@ pub struct OrderBuilder {
     pub rest_addr: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub enum OrderState {
+    OutForDelivery,
+    Delivered,
+}
+
 // Impls
 impl Order {
     pub fn build(builder: OrderBuilder) -> Option<Self> {
@@ -48,6 +54,26 @@ impl Order {
         match serde_json::to_string(&self) {
             Ok(s) => Ok(s),
             Err(e) => Err(OrderServiceError::from(e)),
+        }
+    }
+}
+
+impl std::fmt::Display for OrderState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OrderState::OutForDelivery => write!(f, "OutForDelivery"),
+            OrderState::Delivered => write!(f, "Delivered"),
+        }
+    }
+}
+
+impl std::str::FromStr for OrderState { 
+    type Err = ();
+    fn from_str(input: &str) -> Result<OrderState, Self::Err> {
+        match input {
+            "OutForDelivery" => Ok(OrderState::OutForDelivery),
+            "Delivered" => Ok(OrderState::Delivered),
+            _ => Err(()),
         }
     }
 }
