@@ -30,8 +30,12 @@ pub async fn pickup_order(path: web::Path<String>) -> impl Responder {
         Some(v) => v,
         None => return generate_response(&mut HttpResponse::InternalServerError(), DB_IP_ENV_ERR_MSG),
     };
+    let kafka_ip = match get_kafka_ip() {
+        Some(v) => v,
+        None => return generate_response(&mut HttpResponse::InternalServerError(), KAFKA_IP_ENV_ERR_MSG),
+    };
     let id = path.into_inner();
-    match workers::mark_order_as_out_for_delivery(&id, &db_ip) {
+    match workers::mark_order_as_out_for_delivery(&id, &db_ip, &kafka_ip) {
         Ok(_) => 
             return generate_response(&mut HttpResponse::Ok(),format!("Order is now out for delivery!")),
         Err(e) =>
@@ -45,8 +49,12 @@ pub async fn deliver_order(path: web::Path<String>) -> impl Responder {
         Some(v) => v,
         None => return generate_response(&mut HttpResponse::InternalServerError(), DB_IP_ENV_ERR_MSG),
     };
+    let kafka_ip = match get_kafka_ip() {
+        Some(v) => v,
+        None => return generate_response(&mut HttpResponse::InternalServerError(), KAFKA_IP_ENV_ERR_MSG),
+    };
     let id = path.into_inner();
-    match workers::mark_order_as_delivered(&id, &db_ip) {
+    match workers::mark_order_as_delivered(&id, &db_ip, &kafka_ip) {
         Ok(_) => 
             return generate_response(&mut HttpResponse::Ok(),format!("Order is now delivered!")),
         Err(e) =>
