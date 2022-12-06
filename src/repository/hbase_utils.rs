@@ -7,6 +7,14 @@ use rand_pcg::Pcg64;
 use crate::models::{orders::{Order, OrderBuilder}};
 
 
+pub fn create_cell_mutation(column_family: impl Into<String>, column: impl Into<String>,  value: impl Into<Vec<u8>>) -> MutationBuilder {
+    let mut mutation = MutationBuilder::default();
+    mutation.column(column_family, column);
+    mutation.value(value);
+    mutation
+}
+
+
 pub fn create_order_builder_from_hbase_row(
     hbase_row: &hbase_thrift::hbase::TRowResult,
 ) -> OrderBuilder {
@@ -27,18 +35,6 @@ pub fn create_order_builder_from_hbase_row(
     }
     order_builder
 }
-
-
-// fn get_column(col: &Vec<u8>) -> Option<(String, String)> {
-//     let column: String = match std::str::from_utf8(col) {
-//         Ok(colname) => colname.to_string(),
-//         Err(_) => return None,
-//     };
-//     Some(match column.split_once(':') {
-//         Some(v) => (v.0.to_owned(), v.1.to_owned()),
-//         None => return None,
-//     })
-// }
 
 fn get_column(col: &[u8]) -> Option<(String, String)> {
     let column = std::str::from_utf8(col).ok()?;
@@ -65,6 +61,7 @@ fn set_order_field(field: (String, String), val: String, order_builder: &mut Ord
     let col: (&str, &str) = (&field.0, &field.1);
     match col {
         ("info", "o_id") => order_builder.o_id = Some(val.clone()),
+        ("info", "state") => order_builder.state = Some(val.clone()),
         ("ids", "c_id") => order_builder.c_id = Some(val.clone()),
         ("ids", "r_id") => order_builder.r_id = Some(val.clone()),
         ("addr", "c_addr") => order_builder.cust_addr = Some(val.clone()),
@@ -95,6 +92,7 @@ pub fn create_scan(columns_to_fetch: Vec<Vec<u8>>, filter_colfam: &str, filter_c
 // Only for testing purposes 
 pub(crate) fn order_to_trowresult(order: Order) -> hbase_thrift::hbase::TRowResult {
     let mut columns: std::collections::BTreeMap<hbase_thrift::hbase::Text, hbase_thrift::hbase::TCell> = std::collections::BTreeMap::new();
+    columns.insert("info:state".as_bytes().to_vec(), _to_tcell(&order.state));
     columns.insert("ids:c_id".as_bytes().to_vec(), _to_tcell(&order.c_id));
     columns.insert("ids:r_id".as_bytes().to_vec(), _to_tcell(&order.r_id));
     columns.insert("addr:c_addr".as_bytes().to_vec(), _to_tcell(&order.cust_addr));
@@ -102,7 +100,7 @@ pub(crate) fn order_to_trowresult(order: Order) -> hbase_thrift::hbase::TRowResu
     hbase_thrift::hbase::TRowResult { row: Some(order.o_id.as_bytes().to_vec()), columns: Some(columns), sorted_columns: None }
 }
 
-fn _to_tcell(val: &str) -> hbase_thrift::hbase::TCell {
+pub(crate) fn _to_tcell(val: &str) -> hbase_thrift::hbase::TCell {
     hbase_thrift::hbase::TCell { value: Some(val.as_bytes().to_vec()), timestamp: Some(0) }
 }
 
@@ -112,10 +110,33 @@ mod tests {
 
     use super::*;
     use crate::models::orders::{Order, OrderBuilder};
+    #[test]
+    fn test_create_cell_mutation_is_some() {
+        let colfam = "columnfamily";
+        let col = "col";
+        let value = "value";
+        let res = create_cell_mutation(colfam, col, value);
+        assert!(res.column.is_some(), "Column was none");
+        assert!(res.value.is_some(), "Value was none");
+    }
+
+    #[test]
+    fn test_create_cell_mutation_correct() {
+        let colfam = "columnfamily";
+        let col = "col";
+        let value = "value";
+        let res = create_cell_mutation(colfam, col, value);
+        let (res_colfam, res_col) = res.column.unwrap();
+        let res_value = res.value.unwrap();
+        let exp_value: Vec<u8> = value.into();
+        assert_eq!(res_colfam, colfam, "Column Family did not match");
+        assert_eq!(res_col, col, "Column name did not match");
+        assert_eq!(res_value, exp_value, "Value did not match");
+    }
 
     #[test]
     fn test_create_order_builder_from_hbase_row_unknown_field() {
-        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into() };
+        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
         let mut columns: std::collections::BTreeMap<hbase_thrift::hbase::Text, hbase_thrift::hbase::TCell> = std::collections::BTreeMap::new();
         columns.insert("ids:c_id".as_bytes().to_vec(), _to_tcell(&order.c_id));
         columns.insert("ids:r_id".as_bytes().to_vec(), _to_tcell(&order.r_id));
@@ -133,7 +154,7 @@ mod tests {
 
     #[test]
     fn test_create_order_builder_from_hbase_row_missing_field() {
-        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into() };
+        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
         let mut columns: std::collections::BTreeMap<hbase_thrift::hbase::Text, hbase_thrift::hbase::TCell> = std::collections::BTreeMap::new();
         columns.insert("info:o_id".as_bytes().to_vec(), _to_tcell(&order.o_id));
         // columns.insert("ids:c_id".as_bytes().to_vec(), _to_tcell(&order.c_id));
@@ -152,7 +173,7 @@ mod tests {
 
     #[test]
     fn test_create_order_builder_from_hbase_row_on_content() {
-        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into() };
+        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
         let trowresult = order_to_trowresult(order.clone());
         let obuilder = create_order_builder_from_hbase_row(&trowresult);
         assert_eq!(obuilder.o_id.unwrap(), order.o_id);
@@ -164,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_create_order_builder_from_hbase_row_on_content_empty_order() {
-        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into() };
+        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
         let trowresult = order_to_trowresult(order.clone());
         let obuilder = create_order_builder_from_hbase_row(&trowresult);
         assert_eq!(obuilder.o_id.unwrap(), order.o_id);
@@ -176,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_create_order_builder_from_hbase_row_is_some() {
-        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into() };
+        let order = Order{cust_addr: "addr".into(), rest_addr: "addr2".into(), c_id: "custid".into(), r_id: "restid".into(), o_id: "o_id".into(), state:"pending".into() };
         let trowresult = order_to_trowresult(order);
         let obuilder = create_order_builder_from_hbase_row(&trowresult);
         assert!(obuilder.o_id.is_some());

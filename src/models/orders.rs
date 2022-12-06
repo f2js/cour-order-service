@@ -21,6 +21,7 @@ pub struct Order {
     pub r_id: String,
     pub cust_addr: String,
     pub rest_addr: String,
+    pub state: String,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -30,6 +31,13 @@ pub struct OrderBuilder {
     pub r_id: Option<String>,
     pub cust_addr: Option<String>,
     pub rest_addr: Option<String>,
+    pub state: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub enum OrderState {
+    OutForDelivery,
+    Delivered,
 }
 
 // Impls
@@ -41,6 +49,7 @@ impl Order {
             r_id: builder.r_id?,
             cust_addr: builder.cust_addr?,
             rest_addr: builder.rest_addr?,
+            state: builder.state?,
         })
     }
 
@@ -48,6 +57,26 @@ impl Order {
         match serde_json::to_string(&self) {
             Ok(s) => Ok(s),
             Err(e) => Err(OrderServiceError::from(e)),
+        }
+    }
+}
+
+impl std::fmt::Display for OrderState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OrderState::OutForDelivery => write!(f, "OutForDelivery"),
+            OrderState::Delivered => write!(f, "Delivered"),
+        }
+    }
+}
+
+impl std::str::FromStr for OrderState { 
+    type Err = ();
+    fn from_str(input: &str) -> Result<OrderState, Self::Err> {
+        match input {
+            "OutForDelivery" => Ok(OrderState::OutForDelivery),
+            "Delivered" => Ok(OrderState::Delivered),
+            _ => Err(()),
         }
     }
 }
