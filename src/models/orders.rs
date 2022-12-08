@@ -40,6 +40,11 @@ pub enum OrderState {
     Delivered,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct OrderEvent {
+    pub o_id: String,
+}
+
 // Impls
 impl Order {
     pub fn build(builder: OrderBuilder) -> Option<Self> {
@@ -57,6 +62,13 @@ impl Order {
         match serde_json::to_string(&self) {
             Ok(s) => Ok(s),
             Err(e) => Err(OrderServiceError::from(e)),
+        }
+    }
+
+    pub fn from_json_string(s: &str) -> Result<Order, OrderServiceError> {
+        match serde_json::from_str::<Order>(s) {
+            Ok(r) => Ok(r),
+            Err(e)=> Err(OrderServiceError::from(e)),
         }
     }
 }
@@ -77,6 +89,37 @@ impl std::str::FromStr for OrderState {
             "OutForDelivery" => Ok(OrderState::OutForDelivery),
             "Delivered" => Ok(OrderState::Delivered),
             _ => Err(()),
+        }
+    }
+}
+
+impl From<Order> for OrderEvent {
+    fn from(o: Order) -> Self {
+        Self {
+            o_id: o.o_id
+        }
+    }
+}
+
+impl OrderEvent {
+    pub fn to_json_string(&self) -> Result<String, OrderServiceError> {
+        match serde_json::to_string(&self) {
+            Ok(s) => Ok(s),
+            Err(e) => Err(OrderServiceError::from(e)),
+        }
+    }
+
+    pub fn from_json_string(s: &str) -> Result<OrderEvent, OrderServiceError> {
+        match serde_json::from_str::<OrderEvent>(s) {
+            Ok(r) => Ok(r),
+            Err(e)=> Err(OrderServiceError::from(e)),
+        }
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<OrderEvent, OrderServiceError> {
+        match std::str::from_utf8(b) {
+            Ok(r) => OrderEvent::from_json_string(r),
+            Err(e) => Err(OrderServiceError::SplitColumnError("TEMP ERROR FROM UTF8".into()))
         }
     }
 }

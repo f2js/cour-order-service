@@ -2,10 +2,16 @@ pub mod api;
 pub mod models;
 mod repository;
 mod producers;
+mod consumers;
+
+use std::thread;
 
 use actix_web::{App, HttpServer};
 
 pub async fn run_api() -> std::io::Result<()>{
+    thread::spawn(|| {
+        api::listeners::start_listener();
+    });
     HttpServer::new(|| {
         App::new()
             // register HTTP requests handlers
