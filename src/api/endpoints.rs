@@ -1,6 +1,5 @@
-use crate::{api::utils::env::{get_db_ip, get_kafka_ip, DB_IP_ENV_ERR_MSG, KAFKA_IP_ENV_ERR_MSG}};
+use crate::{api::utils::{env::{get_db_ip, get_kafka_ip, DB_IP_ENV_ERR_MSG, KAFKA_IP_ENV_ERR_MSG}, generate_response}};
 use actix_web::{get, post, HttpResponse, Responder, web, HttpResponseBuilder};
-use serde::Serialize;
 use super::workers;
 // const DB_IP: &str = "165.22.194.124:9090";
 
@@ -60,8 +59,4 @@ pub async fn deliver_order(path: web::Path<String>) -> impl Responder {
         Err(e) =>
             return generate_response(&mut HttpResponse::InternalServerError(), e.to_string()),
     }
-}
-
-fn generate_response(response_builder: &mut HttpResponseBuilder, error: impl Serialize) -> HttpResponse {
-    response_builder.content_type("APPLICATION_JSON").json(error)
 }
