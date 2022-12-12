@@ -16,9 +16,9 @@ pub fn start_listener() {
             };
             println!("db_ip: {}", db_ip);
             let order = OrderEvent::from_bytes(msg.value)?;
-            println!("order: {}", order.o_id);
+            println!("order: {}", order.orderId);
             let con = HbaseConnection::connect(&db_ip)?;
-            hbase::update_order_state(&order.o_id, OrderState::OutForDelivery, get_unix_time(), con)?;
+            hbase::update_order_state(&order.orderId, OrderState::OutForDelivery, get_unix_time(), con)?;
             println!("Successfully updated the state of an order to OutForDelivery!");
             Ok(())
         },
@@ -30,9 +30,9 @@ pub fn start_listener() {
             };
             println!("db_ip: {}", db_ip);
             let order = OrderEvent::from_bytes(msg.value)?;
-            println!("order: {}", order.o_id);
+            println!("order: {}", order.orderId);
             let con = HbaseConnection::connect(&db_ip)?;
-            hbase::update_order_state(&order.o_id, OrderState::Delivered, get_unix_time(), con)?;
+            hbase::update_order_state(&order.orderId, OrderState::Delivered, get_unix_time(), con)?;
             println!("Successfully updated the state of an order to Delivered!");
             Ok(())
         },
