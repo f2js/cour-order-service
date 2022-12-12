@@ -20,10 +20,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_out_for_delivery_is_ok() {
-        let order = OrderEvent{o_id: "o_id".into()};
+        let order = OrderEvent{orderId: "o_id".into(), courierId: "cour_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\"}}", 
-            order.o_id);
+            "{{\"orderId\":\"{}\",\"courierId\":\"{}\"}}", 
+            order.orderId, order.courierId);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {
@@ -40,10 +40,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_out_for_delivery_is_err() {
-        let order = OrderEvent{o_id: "o_id".into()};
+        let order = OrderEvent{orderId: "o_id".into(), courierId: "cour_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\"}}", 
-            order.o_id);
+            "{{\"orderId\":\"{}\",\"courierId\":\"{}\"}}", 
+            order.orderId, order.courierId);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {
@@ -59,10 +59,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_delivered_is_ok() {
-        let order = OrderEvent{o_id: "o_id".into()};
+        let order = OrderEvent{orderId: "o_id".into(), courierId: "cour_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\"}}", 
-            order.o_id);
+            "{{\"orderId\":\"{}\",\"courierId\":\"{}\"}}", 
+            order.orderId, order.courierId);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {
@@ -79,10 +79,10 @@ mod tests {
 
     #[test]
     fn test_raise_event_delivered_is_err() {
-        let order = OrderEvent{o_id: "o_id".into()};
+        let order = OrderEvent{orderId: "o_id".into(), courierId: "cour_id".into()};
         let exp_json  = format!(
-            "{{\"o_id\":\"{}\"}}", 
-            order.o_id);
+            "{{\"orderId\":\"{}\",\"courierId\":\"{}\"}}", 
+            order.orderId, order.courierId);
         let mut mock_prod = MockKafkaProducer::new();
         mock_prod.expect_send()
             .withf(move |x, y| {

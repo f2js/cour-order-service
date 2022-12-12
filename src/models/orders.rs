@@ -42,7 +42,8 @@ pub enum OrderState {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct OrderEvent {
-    pub o_id: String,
+    pub orderId: String,
+    pub courierId: String,
 }
 
 // Impls
@@ -89,14 +90,6 @@ impl std::str::FromStr for OrderState {
             "OutForDelivery" => Ok(OrderState::OutForDelivery),
             "Delivered" => Ok(OrderState::Delivered),
             _ => Err(()),
-        }
-    }
-}
-
-impl From<Order> for OrderEvent {
-    fn from(o: Order) -> Self {
-        Self {
-            o_id: o.o_id
         }
     }
 }
