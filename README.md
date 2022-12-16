@@ -1,4 +1,13 @@
 # cour-order-service
+The order service for the couriers to access the addresses of the orders they pick up.
+
+### Group members: 
+
+**Name** Josef Marc Pedersen **Github** [@josefmarcc ](https://github.com/josefmarcc) **Email** cph-jp325@cphbusiness.dk  
+**Name** Frederik Dinsen **Github**[@fdinsen](https://github.com/fdinsen) **Email** cph-fd77@cphbusiness.dk  
+**Name** Sebastian Bentley **Github** [@sebastianbentley ](https://github.com/SebastianBentley) **Email** cph-sb287@cphbusiness.dk  
+**Name** Frederik Dahl **Github** [@dahlfrederik ](https://github.com/dahlfrederik) **Email** cph-fd76@cphbusiness.dk  
+
 
 ## Status
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/f2js/cour-order-service/tree/main.svg?style=svg&circle-token=a8e72aac924cefac309e010a2f8544fece7401cb)](https://dl.circleci.com/status-badge/redirect/gh/f2js/cour-order-service/tree/main)
